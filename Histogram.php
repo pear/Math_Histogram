@@ -155,6 +155,13 @@ class Math_Histogram extends Math_AbstractHistogram {/*{{{*/
             return $this->_data;
     }
 
+    function getHistogramData() {
+        if (is_null($this->_data))
+            return PEAR::raiseError("data has not been set");
+        else
+            return $this->_histogramData();
+    }
+
     /**
      * Calculates the histogram bins and frequencies
      *
@@ -170,7 +177,7 @@ class Math_Histogram extends Math_AbstractHistogram {/*{{{*/
         $delta = ($this->_rangeHigh - $this->_rangeLow) / $this->_nbins;
         $lastpos = 0;
         $cumm = 0;
-        $data = $this->_filterData();
+        $data = $this->_histogramData();
         $ndata = count($data);
         for ($i=0; $i < $this->_nbins; $i++) {
             $loBin = $this->_rangeLow + $i * $delta;
@@ -183,29 +190,18 @@ class Math_Histogram extends Math_AbstractHistogram {/*{{{*/
             else
                 $this->_bins[$i]["count"] = 0;
             for ($j=$lastpos; $j < $ndata; $j++) {
-                if ($i == 0) {
-                    if ($data[$j] >= $loBin
-                        && $data[$j] <= $hiBin) {
+                if ($data[$j] <= $hiBin) {
+                    if (($i == 0 && $data[$j] >= $loBin)
+                            || ($i > 0 && $data[$j] > $loBin)) {
                         $this->_bins[$i]["count"]++;
                         if ($this->_type == HISTOGRAM_CUMMULATIVE)
                             $cumm++;
                         continue;
-                    } else {
-                        $lastpos = $j;
-                        break;
                     }
                 } else {
-                    if ($data[$j] > $loBin
-                        && $data[$j] <= $hiBin) {
-                        $this->_bins[$i]["count"]++;
-                        if ($this->_type == HISTOGRAM_CUMMULATIVE)
-                            $cumm++;
-                        continue;
-                    } else {
                         $lastpos = $j;
                         break;
-                    }
-                } 
+                }
             }
         }
         return true;
@@ -224,18 +220,14 @@ class Math_Histogram extends Math_AbstractHistogram {/*{{{*/
                         "type" => ($this->_type == HISTOGRAM_CUMMULATIVE) ?  
                                             "cummulative frequency" : "histogram",
                         "data_stats" => $this->getDataStats(),
+                        "hist_data_stats" => $this->getHistogramDataStats(),
+                        "bins" => $this->_bins,
+                        "nbins" => $this->_nbins,
+                        "range" => array(
+                                       "low" => $this->_rangeLow,
+                                       "high" => $this->_rangeHigh
+                                   )
                     );
-            // add the stats for the histogram subset if the bin ranges are
-            // not null
-            if (!is_null($this->_rangeLow) && !is_null($this->_rangeHigh))
-                $info ["hist_data_stats"] = $this->getHistogramDataStats();
-                        
-            $info["bins"] = $this->_bins;
-            $info["nbins"] = $this->_nbins;
-            $info["range"] = array(
-                                "low" => $this->_rangeLow,
-                                "high" => $this->_rangeHigh
-                                );
             return $info;
         } else {
             return PEAR::raiseError("histogram has not been calculated");
@@ -280,7 +272,7 @@ class Math_Histogram extends Math_AbstractHistogram {/*{{{*/
      */
     function getHistogramDataStats() {/*{{{*/
         if (!empty($this->_nbins)) {
-            $this->_stats->setData($this->_filterData());
+            $this->_stats->setData($this->_histogramData());
             return $this->_stats->calc($this->_statsMode);
         } else {
             return PEAR::raiseError("histogram has not been calculated");
@@ -323,9 +315,11 @@ class Math_Histogram extends Math_AbstractHistogram {/*{{{*/
         if (empty($this->_bins))
             return PEAR::raiseError("histogram has not been calculated");
         $out = ($this->_type == HISTOGRAM_CUMMULATIVE) ?  "Cummulative Frequency" : "Histogram";
-        $out .= ", Number of bins: ".$this->_nbins."\n";
-        $out .= "Histogram range: [".$this->_rangeLow.", ".$this->_rangeHigh."]\n";
-        $out .= "Data range: [".min($this->_data).", ".max($this->_data)."]\n";
+        $out .= "\n\tNumber of bins: ".$this->_nbins."\n";
+        $out .= "\tPlot range: [".$this->_rangeLow.", ".$this->_rangeHigh."]\n";
+        $hdata = $this->_histogramData();
+        $out .= "\tData range: [".min($hdata).", ".max($hdata)."]\n";
+        $out .= "\tOriginal data range: [".min($this->_data).", ".max($this->_data)."]\n";
         $out .= "BIN (COUNT) BAR (%)\n";
         $fmt = "%-4.2f (%-4d) |%s\n";
         $bins = $this->_filterBins($mode);
@@ -366,7 +360,7 @@ class Math_Histogram extends Math_AbstractHistogram {/*{{{*/
         return $filtered;
     }/*}}}*/
 
-    function _filterData() {
+    function _histogramData() {
         $data = array();
         foreach ($this->_data as $val)
             if ($val < $this->_rangeLow || $val > $this->_rangeHigh)

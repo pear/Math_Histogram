@@ -18,6 +18,8 @@
 //
 // $Id$
 //
+// Last change: Tuesday 2002-05-21 19:58:48 PDT.
+//
 
 //include_once "Math/AbstractHistogram.php";
 include_once "AbstractHistogram.php";
@@ -158,6 +160,7 @@ class Math_Histogram extends Math_AbstractHistogram {/*{{{*/
         $cumm = 0;
         $data = $this->_histogramData();
         $ndata = count($data);
+        $ignoreList = array();
         for ($i=0; $i < $this->_nbins; $i++) {
             $loBin = $this->_rangeLow + $i * $delta;
             $hiBin = $loBin + $delta;
@@ -168,47 +171,22 @@ class Math_Histogram extends Math_AbstractHistogram {/*{{{*/
                 $this->_bins[$i]["count"] = $cumm;
             else
                 $this->_bins[$i]["count"] = 0;
-            for ($j=$lastpos; $j < $ndata; $j++) {
-                if ( ($i == 0 && $this->_inRange($data[$j], $loBin, $hiBin, true, true))
-                        || ($i > 0 && $this->_inRange($data[$j], $loBin, $hiBin))) {
+            for ($j=0; $j < $ndata; $j++) {
+                if (!empty($ignoreList) && in_array($j, $ignoreList))
+                    continue;
+                if ( $j == 0 )
+                    $inRange = ($loBin <= $data[$j] && $hiBin >= $data[$j]);
+                else
+                    $inRange = ($loBin < $data[$j] && $hiBin >= $data[$j]);
+                if ($inRange) {
                     $this->_bins[$i]["count"]++;
                     if ($this->_type == HISTOGRAM_CUMMULATIVE)
                         $cumm++;
-                    continue;
-                } else {
-                    $lastpos = $j;
-                    break;
+                    $ignoreList[] = $j;
                 }
             }
         }
         return true;
-    }/*}}}*/
-
-    /**
-     * Returns the statistics for the data set and the histogram bins and
-     * frequencies
-     *
-     * @access  public
-     * @return  mixed   an associative array on success, a PEAR_Error object otherwise
-     */ 
-    function getHistogramInfo() {/*{{{*/
-        if (!empty($this->_nbins)) {
-            $info = array (
-                        "type" => ($this->_type == HISTOGRAM_CUMMULATIVE) ?  
-                                            "cummulative frequency" : "histogram",
-                        "data_stats" => $this->getDataStats(),
-                        "hist_data_stats" => $this->getHistogramDataStats(),
-                        "bins" => $this->_bins,
-                        "nbins" => $this->_nbins,
-                        "range" => array(
-                                       "low" => $this->_rangeLow,
-                                       "high" => $this->_rangeHigh
-                                   )
-                    );
-            return $info;
-        } else {
-            return PEAR::raiseError("histogram has not been calculated");
-        }
     }/*}}}*/
 
     /**
@@ -218,7 +196,7 @@ class Math_Histogram extends Math_AbstractHistogram {/*{{{*/
      * @return  mixed   an associative array on success, a PEAR_Error object otherwise
      */
     function getDataStats() {/*{{{*/
-        if (!empty($this->_nbins)) {
+        if (!empty($this->_bins)) {
             $this->_stats->setData($this->_data);
             return $this->_stats->calc($this->_statsMode);
         } else {
@@ -241,29 +219,24 @@ class Math_Histogram extends Math_AbstractHistogram {/*{{{*/
         }
     }/*}}}*/
 
-
     /**
-     * Returns bins and frequencies for the histogram data set
+     * Returns the bins and frequencies calculated using the given
+     * bin mode and separator
      *
      * @access  public
-     * @param   optional    int $mode   one of HISTOGRAM_ALL_BINS, HISTOGRAM_LO_BINS, HISTOGRAM_MID_BINS, or HISTOGRAM_HI_BINS 
-     * @return  mixed   an associative array on success, a PEAR_Error object otherwise
+     * @param   int $mode   one of HISTOGRAM_LO_BINS, HISTOGRAM_MID_BINS (default), or HISTOGRAM_HI_BINS
+     * @param   string  $separator  the separator, default ", "
+     * @return  mixed  a string on success, a PEAR_Error object otherwise
      */
-    function getBins($mode = HISTOGRAM_ALL_BINS) {/*{{{*/
-        if (empty($this->_bins))
-            return PEAR::raiseError("histogram has not been calculated");
-        switch ($mode) {
-            case HISTOGRAM_ALL_BINS :
-                return $this->_bins;
-                break;
-            case HISTOGRAM_MID_BINS :
-            case HISTOGRAM_LO_BINS :
-            case HISTOGRAM_HI_BINS :
-                return $this->_filterBins($mode);
-                break;
-            default :
-                return PEAR::raiseError("incorrect mode for bins");
-        }
+    function toSeparated($mode=HISTOGRAM_MID_BINS, $separator=", ") {/*{{{*/
+        $bins = $this->getBins($mode);
+        if (PEAR::isError($bins))
+            return $bins;
+        $nbins = count($bins);
+        $out = array("# bin{$separator}frequency");
+        foreach ($bins as $bin=>$freq)
+            $out[] = "{$bin}{$separator}{$freq}";
+        return implode("\n", $out)."\n";
     }/*}}}*/
 
     /**
@@ -282,8 +255,8 @@ class Math_Histogram extends Math_AbstractHistogram {/*{{{*/
         $hdata = $this->_histogramData();
         $out .= "\tData range: [".min($hdata).", ".max($hdata)."]\n";
         $out .= "\tOriginal data range: [".min($this->_data).", ".max($this->_data)."]\n";
-        $out .= "BIN (COUNT) BAR (%)\n";
-        $fmt = "%-4.2f (%-4d) |%s\n";
+        $out .= "BIN (FREQUENCY) ASCII_BAR (%)\n";
+        $fmt = "%-4.3f (%-4d) |%s\n";
         $bins = $this->_filterBins($mode);
         $maxfreq = max(array_values($bins));
         $total = count($this->_data);

@@ -18,6 +18,8 @@
 //
 // $Id$
 //
+// Last change: Tuesday 2002-05-21 18:52:58 PDT.
+//
 
 include_once "Math/Stats.php";
 
@@ -189,28 +191,57 @@ class Math_AbstractHistogram {/*{{{*/
     }/*}}}*/
 
     /**
-     * Utility function to check that a value is in the given range
+     * Returns bins and frequencies for the histogram data set
      *
-     * @access  _private
-     * @param   numeric $val    the value
-     * @param   numeric $lo the lower range limit
-     * @param   numeric $hi the upper range limit
-     * @param   optional    boolean $loOpen whether the lower range is open, i.e. [$lo
-     * @param   optional    boolean $hiOpen whether the upper range is open, i.e. $hi]
-     * @return   boolean
+     * @access  public
+     * @param   optional    int $mode   one of HISTOGRAM_ALL_BINS, HISTOGRAM_LO_BINS, HISTOGRAM_MID_BINS, or HISTOGRAM_HI_BINS 
+     * @return  mixed   an associative array on success, a PEAR_Error object otherwise
      */
-    function _inRange($val, $lo, $hi, $loOpen=true, $hiOpen=false) {/*{{{*/
-		if ($hiOpen)
-			$hbool = ($val <= $hi);
-		else
-			$hbool = ($val < $hi);
+    function getBins($mode = HISTOGRAM_ALL_BINS) {/*{{{*/
+        if (empty($this->_bins))
+            return PEAR::raiseError("histogram has not been calculated");
+        switch ($mode) {
+            case HISTOGRAM_ALL_BINS :
+                return $this->_bins;
+                break;
+            case HISTOGRAM_MID_BINS :
+            case HISTOGRAM_LO_BINS :
+            case HISTOGRAM_HI_BINS :
+                return $this->_filterBins($mode);
+                break;
+            default :
+                return PEAR::raiseError("incorrect mode for bins");
+        }
+    }/*}}}*/
 
-		if ($loOpen)
-			$lbool = ($val <= $lo);
-		else
-			$lbool = ($val < $lo);
-		return $hbool && $lbool;
-	}/*}}}*/
+    /**
+     * Returns the statistics for the data set and the histogram bins and
+     * frequencies
+     *
+     * @access  public
+     * @return  mixed   an associative array on success, a PEAR_Error object otherwise
+     */ 
+    function getHistogramInfo() {/*{{{*/
+        if (!empty($this->_nbins)) {
+            $info = array (
+                        "type" => ($this->_type == HISTOGRAM_CUMMULATIVE) ?  
+                                            "cummulative frequency" : "histogram",
+                        "data_stats" => $this->getDataStats(),
+                        "hist_data_stats" => $this->getHistogramDataStats(),
+                        "bins" => $this->_bins,
+                        "nbins" => $this->_nbins,
+                        "range" => array(
+                                       "low" => $this->_rangeLow,
+                                       "high" => $this->_rangeHigh
+                                   )
+                    );
+            return $info;
+        } else {
+            return PEAR::raiseError("histogram has not been calculated");
+        }
+    }/*}}}*/
+
+
 
     /**
      * Resets the values of several private properties

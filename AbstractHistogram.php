@@ -70,29 +70,28 @@ class Math_AbstractHistogram {/*{{{*/
      */
     var $_bins = array();
     /**
-     * Number of bins to use in calculation
+     * Number(s) of bins to use in calculation
      *
      * @access  private
-     * @var int
+     * @var mixed
      */
     var $_nbins;
     /**
-     * The lowest value to be used when generating the bins
+     * The lowest value(s) to be used when generating the bins
      *
      * @access  private
-     * @var float
+     * @var mixed
      */
     var $_rangeLow;
     /**
-     * The highest value to be used when generating the bins
+     * The highest value(s) to be used when generating the bins
      *
      * @access  private
-     * @var float
+     * @var mixed
      */
     var $_rangeHigh;
     /**
-     * The data set after filtering using $this->_rangeHigh and
-     * $this->_rangeLow
+     * The data set 
      *
      * @access  private
      * @var array
@@ -100,14 +99,6 @@ class Math_AbstractHistogram {/*{{{*/
      * @see $_rangeHigh
      */
     var $_data = null;
-    /**
-     * The original data, count, etc.
-     *
-     * @access  private
-     * @var array
-     * @see $_data
-     */
-    var $_orig = array();
 
     /*}}}*/
 
@@ -120,7 +111,7 @@ class Math_AbstractHistogram {/*{{{*/
      * @see setType()
      * @see setBinOptions()
      */
-    function Math_AbstractHistogram($type=HISTOGRAM_SIMPLE) {
+    function Math_AbstractHistogram($type=HISTOGRAM_SIMPLE) {/*{{{*/
         $this->setType($type);
     }/*}}}*/
 
@@ -140,8 +131,89 @@ class Math_AbstractHistogram {/*{{{*/
         }
     }/*}}}*/
 
+    /**
+     * Sets the binning options
+     * 
+     * @access  public
+     * @param   array   $binOptions associative array of bin options
+     * @return  mixed   true on succcess, a PEAR_Error object otherwise 
+     */
+	function setBinOptions($binOptions) {/*{{{*/
+		if (!is_array($binOptions))
+			return PEAR::raiseError("incorrect options array");
+		$this->_rangeLow = $binOptions["low"];
+		$this->_rangeHigh = $binOptions["high"];
+		$this->_nbins = $binOptions["nbins"];
+        return true;
+	}/*}}}*/
+
+    /**
+     * Abstract method to set data. Needs to be implemented in each subclass
+     *
+     * @access  public
+     * @param   array   $data
+     */
+    function setData($data) {/*{{{*/
+    }/*}}}*/
+
+    /**
+     * Returns the array of data set using setData()
+     *
+     * @access  public
+     * @return  mixed   a numerical array on success, a PEAR_Error object otherwise
+     *
+     * @see setData()
+     */
+    function getData() {/*{{{*/
+        if (is_null($this->_data))
+            return PEAR::raiseError("data has not been set");
+        else
+            return $this->_data;
+    }/*}}}*/
+
+
+    /**
+     * Utility function to check that a value is in the given range
+     *
+     * @access  _private
+     * @param   numeric $val    the value
+     * @param   numeric $lo the lower range limit
+     * @param   numeric $hi the upper range limit
+     * @param   optional    boolean $loOpen whether the lower range is open, i.e. [$lo
+     * @param   optional    boolean $hiOpen whether the upper range is open, i.e. $hi]
+     * @return   boolean
+     */
+    function _inRange($val, $lo, $hi, $loOpen=true, $hiOpen=false) {/*{{{*/
+		if ($hiOpen)
+			$hbool = ($val <= $hi);
+		else
+			$hbool = ($val < $hi);
+
+		if ($loOpen)
+			$lbool = ($val <= $lo);
+		else
+			$lbool = ($val < $lo);
+		return $hbool && $lbool;
+	}/*}}}*/
+
+    /**
+     * Resets the values of several private properties
+     *
+     * @access  private
+     * @return  void
+     */
+    function _clear() {/*{{{*/
+        $this->_stats = null;
+        $this->_statsMode = null;
+        $this->_data = null;
+        $this->_orig = array();
+        $this->_bins = array();
+    }/*}}}*/
+
+
+
 }/*}}}*/
 // vim: ts=4:sw=4:et:
-// vim6: fdl=0:
+// vim6: fdl=1:
 
 ?>

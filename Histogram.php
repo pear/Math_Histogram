@@ -73,7 +73,7 @@ include_once "Math/AbstractHistogram.php";
  * Originally this class was part of NumPHP (Numeric PHP package)
  *
  * @author  Jesus M. Castagnetto <jmcastagnetto@php.net>
- * @version 0.9.0
+ * @version 0.9.1beta
  * @access  public
  * @package Math_Histogram
  */
@@ -111,6 +111,23 @@ class Math_Histogram extends Math_AbstractHistogram {/*{{{*/
         $this->_nbins = (is_int($nbins) && $nbins > 2) ? $nbins : 10;
         $this->_rangeLow = $rangeLow;
         $this->_rangeHigh = $rangeHigh;
+    }/*}}}*/
+
+    /**
+     * Returns an associative array with the bin options
+     *
+     * @access public
+     * @return array Associative array of bin options: 
+     *                  array(  'nbins'=>$nbins, 
+     *                          'rangeLow'=>$rangeLow,
+     *                          'rangeHigh'=>$rangeHigh);
+     */
+    function getBinOptions() {/*{{{*/
+        return array (
+                'nbins' => $this->_nbins,
+                'rangeLow' => $this->_rangeLow,
+                'rangeHigh' => $this->_rangeHigh
+                );
     }/*}}}*/
     
     /**
@@ -195,7 +212,7 @@ class Math_Histogram extends Math_AbstractHistogram {/*{{{*/
      * @return  mixed   an associative array on success, a PEAR_Error object otherwise
      */
     function getDataStats() {/*{{{*/
-        if (!empty($this->_bins)) {
+        if ($this->isCalculated()) {
             $this->_stats->setData($this->_data);
             return $this->_stats->calc($this->_statsMode);
         } else {
@@ -210,7 +227,7 @@ class Math_Histogram extends Math_AbstractHistogram {/*{{{*/
      * @return  mixed   an associative array on success, a PEAR_Error object otherwise
      */
     function getHistogramDataStats() {/*{{{*/
-        if (!empty($this->_nbins)) {
+        if ($this->isCalculated()) {
             $this->_stats->setData($this->_histogramData());
             return $this->_stats->calc($this->_statsMode);
         } else {
@@ -239,15 +256,55 @@ class Math_Histogram extends Math_AbstractHistogram {/*{{{*/
     }/*}}}*/
 
     /**
+     * Static method to check that an object is a Math_Histogram instance
+     *
+     * @static
+     * @access public
+     * @param  object Math_Histogram $hist An instance of the Math_Histogram class
+     * @return boolean TRUE on success, FALSE otherwise
+     */
+    function isValidHistogram(&$hist) {/*{{{*/
+        return (is_object($hist) && is_a($hist, 'Math_Histogram'));
+    }/*}}}*/
+
+    /**
+     * Method to interrogate if a histogram has been calculated
+     * 
+     * @access public
+     * @return boolean TRUE if the histogram was calculated, FALSE otherwise
+     * @see calculate()
+     */
+    function isCalculated() {/*{{{*/
+        return !empty($this->_bins);
+    }/*}}}*/
+
+    /**
+     * Generates a plot using the appropriate printer object
+     *
+     * @param object $printer A Math_Histogram_Printer_* object
+     * @return string|PEAR_Error A string on success, a PEAR_Error otherwise
+     */
+    function generatePlot(&$printer) {/*{{{*/
+        if (is_object($printer) && is_a($printer, 'Math_Histogram_Printer_Common')) {
+            $printer->setHistogram($this);
+            return $printer->generateOutput();
+        } else {
+            return PEAR::raiseError('Invalid object, expecting a Math_Histogram_Printer_* instance');
+        }
+    }/*}}}*/
+    
+    /**
      * Prints a simple ASCII representation of the histogram
      *
+     * @deprecated
      * @access  public
      * @param   optional    int $mode   one of HISTOGRAM_LO_BINS, HISTOGRAM_MID_BINS, or HISTOGRAM_HI_BINS (default)
      * @return  mixed   a string on success, a PEAR_Error object otherwise
      */
     function printHistogram($mode = HISTOGRAM_HI_BINS) {/*{{{*/
-        if (empty($this->_bins))
+        if (!$this->isCalculated()) {
             return PEAR::raiseError("histogram has not been calculated");
+        }
         $out = ($this->_type == HISTOGRAM_CUMMULATIVE) ?  "Cummulative Frequency" : "Histogram";
         $out .= "\n\tNumber of bins: ".$this->_nbins."\n";
         $out .= "\tPlot range: [".$this->_rangeLow.", ".$this->_rangeHigh."]\n";

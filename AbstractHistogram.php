@@ -40,7 +40,7 @@ define("HISTOGRAM_CUMMULATIVE", 2);
  * Originally this class was part of NumPHP (Numeric PHP package)
  *
  * @author  Jesus M. Castagnetto <jmcastagnetto@php.net>
- * @version 1.0
+ * @version 0.9.1beta
  * @access  public
  * @package Math_Histogram
  */

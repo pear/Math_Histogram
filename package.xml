@@ -20,29 +20,42 @@
       <email>jmcastagnetto@php.net</email>
       <role>lead</role>
     </maintainer>
+    <maintainer>
+      <user>jmcastagnetto</user>
+      <name>Jesus M. Castagnetto</name>
+      <email>jmcastagnetto@php.net</email>
+      <role>lead</role>
+    </maintainer>
   </maintainers>
 
   <release>
     <license>PHP</license>
-    <version>0.9.0</version>
-    <date>2002-05-22</date>
+    <version>0.9.1beta</version>
+    <date>2003-09-20</date>
     <notes>
-       Initial release under PEAR
+     Implementing Math_Histogram_Printer_* classes
     </notes>
     <state>beta</state>
     <filelist>
       <dir name="/" baseinstalldir="Math">
-      <file role="doc">README-Math_Histogram</file>
-      <file role="php">AbstractHistogram.php</file>
-      <file role="php">Histogram.php</file>
-      <file role="php">Histogram3D.php</file>
-      <file role="php">Histogram4D.php</file>
-        <dir name="examples">
-          <file role="php">ex_histogram.php</file>
-          <file role="data">ex_histogram.data</file>
-          <file role="php">ex_histogram3d.php</file>
-          <file role="php">ex_histogram4d.php</file>
+       <file role="doc">README-Math_Histogram</file>
+       <file role="php">AbstractHistogram.php</file>
+       <file role="php">Histogram.php</file>
+       <file role="php">Histogram3D.php</file>
+       <file role="php">Histogram4D.php</file>
+       <dir name="Histogram">
+        <dir name="Printer">
+         <file role="php">Common.php</file>
+         <file role="php">Text.php</file>
         </dir>
+       </dir>
+       <dir name="examples" role="test">
+        <file>ex_histogram.php</file>
+        <file>ex_histogram_printer.php</file>
+        <file>ex_histogram.data</file>
+        <file>ex_histogram3d.php</file>
+        <file>ex_histogram4d.php</file>
+       </dir>
       </dir>
     </filelist>
     <deps>
@@ -52,6 +65,14 @@
   </release>
 
   <changelog>
+  <release>
+    <version>0.9.1beta</version>
+    <date>2002-05-22</date>
+    <notes>
+     Implementing Printer classes
+    </notes>
+    <state>beta</state>
+  </release>
    <release>
      <license>PHP</license>
      <version>0.9.0</version>

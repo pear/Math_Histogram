@@ -30,7 +30,7 @@ include_once "Math/AbstractHistogram.php";
  * Originally this class was part of NumPHP (Numeric PHP package)
  *
  * @author  Jesus M. Castagnetto <jmcastagnetto@php.net>
- * @version 0.9.0
+ * @version 0.9.1beta
  * @access  public
  * @package Math_Histogram
  */

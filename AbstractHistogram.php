@@ -171,6 +171,22 @@ class Math_AbstractHistogram {/*{{{*/
             return $this->_data;
     }/*}}}*/
 
+    /**
+     * Returns the array of data used to calculate the histogram,
+     * i.e. the data that was inside the range specified for the
+     * histogram bins
+     *
+     * @access  public
+     * @return  mixed   a numerical array on success, a PEAR_Error object otherwise
+     *
+     * @see setData()
+     */
+    function getHistogramData() {/*{{{*/
+        if (is_null($this->_data))
+            return PEAR::raiseError("data has not been set");
+        else
+            return $this->_histogramData();
+    }/*}}}*/
 
     /**
      * Utility function to check that a value is in the given range
@@ -210,6 +226,18 @@ class Math_AbstractHistogram {/*{{{*/
         $this->_bins = array();
     }/*}}}*/
 
+    /**
+     * Abstract method that returns an array of data contained within the
+     * range for the histogram calculation
+     * Each subclass must implement this method
+     *
+     * @access  private
+     * @return  array
+     */
+    function _histogramData() {/*{{{*/
+        return array();
+    }/*}}}*/
+    
 
 
 }/*}}}*/

@@ -142,23 +142,6 @@ class Math_Histogram extends Math_AbstractHistogram {/*{{{*/
     }/*}}}*/
 
     /**
-     * Returns the array of data used to calculate the histogram,
-     * i.e. the data that was inside the range specified for the
-     * histogram bins
-     *
-     * @access  public
-     * @return  mixed   a numerical array on success, a PEAR_Error object otherwise
-     *
-     * @see setData()
-     */
-    function getHistogramData() {/*{{{*/
-        if (is_null($this->_data))
-            return PEAR::raiseError("data has not been set");
-        else
-            return $this->_histogramData();
-    }/*}}}*/
-
-    /**
      * Calculates the histogram bins and frequencies
      *
      * @access  public
@@ -347,8 +330,9 @@ class Math_Histogram extends Math_AbstractHistogram {/*{{{*/
     }/*}}}*/
 
     /**
-     * Returns an array of data contained within the range for
-     * the histogram calculation
+     * Returns an array of data contained within the range for the 
+     * histogram calculation. Overrides the empty implementation in
+     * Math_AbstractHistogram::_histogramData()
      *
      * @access  private
      * @return  array

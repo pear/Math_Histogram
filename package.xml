@@ -25,7 +25,7 @@
   <release>
     <license>PHP</license>
     <version>0.9.0</version>
-    <date>2002-05-18</date>
+    <date>2002-05-22</date>
     <notes>
        Initial release under PEAR
     </notes>
@@ -55,7 +55,7 @@
    <release>
      <license>PHP</license>
      <version>0.9.0</version>
-     <date>2002-05-18</date>
+     <date>2002-05-22</date>
      <notes>
         Initial release under PEAR
      </notes>

@@ -59,8 +59,8 @@
       </dir>
     </filelist>
     <deps>
-     <dep type="php" rel="ge" version="4.1" />
-     <dep type="pkg" rel="has">Math_Stats</dep>
+     <dep type="php" rel="ge" version="4.2" />
+     <dep type="pkg" rel="ge" version="0.8.0">Math_Stats</dep>
     </deps>
   </release>
 

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE package SYSTEM "../package.dtd">
+<!-- do not use the "Type" attribute here, that one is only for
+     generated package.xml files -->
+<package>
+
+  <name>Math_Histogram</name>
+  <summary>Classes to calculate histogram distributions</summary>
+  <description>
+   Classes to calculate histogram distributions and associated
+   statistics. Supports simple and cummulative histograms.
+   You can generate regular (2D) histograms, 3D, or 4D histograms
+   Data must not have nulls.
+  </description>
+
+  <maintainers>
+    <maintainer>
+      <user>jmcastagnetto</user>
+      <name>Jesus M. Castagnetto</name>
+      <email>jmcastagnetto@php.net</email>
+      <role>lead</role>
+    </maintainer>
+  </maintainers>
+
+  <release>
+    <license>PHP</license>
+    <version>0.9.0</version>
+    <date>2002-05-18</date>
+    <notes>
+       Initial release under PEAR
+    </notes>
+    <state>beta</state>
+    <filelist>
+      <dir name="/" baseinstalldir="Math">
+      <file role="doc">README-Math_Histogram</file>
+      <file role="php">AbstractHistogram.php</file>
+      <file role="php">Histogram.php</file>
+      <file role="php">Histogram3D.php</file>
+      <file role="php">Histogram4D.php</file>
+        <dir name="examples">
+          <file role="php">ex_histogram.php</file>
+          <file role="data">ex_histogram.data</file>
+          <file role="php">ex_histogram3d.php</file>
+          <file role="php">ex_histogram4d.php</file>
+        </dir>
+      </dir>
+    </filelist>
+    <deps>
+     <dep type="php" rel="ge" version="4.1" />
+     <dep type="pkg" rel="ge" version="0.8.0">Math_Stats</dep>
+    </deps>
+  </release>
+
+  <changelog>
+   <release>
+     <license>PHP</license>
+     <version>0.9.0</version>
+     <date>2002-05-18</date>
+     <notes>
+        Initial release under PEAR
+     </notes>
+     <state>beta</state>
+     <filelist>
+       <dir name="/" baseinstalldir="Math">
+       <file role="php">AbstractHistogram.php</file>
+       <file role="php">Histogram.php</file>
+       <file role="php">Histogram3D.php</file>
+       <file role="php">Histogram4D.php</file>
+         <dir name="examples" role="example">
+           <file role="php">ex_histogram.php</file>
+           <file role="data">ex_histogram.data</file>
+           <file role="php">ex_histogram3d.php</file>
+           <file role="php">ex_histogram4d.php</file>
+         </dir>
+       <file role="doc">README-Math_Histogram</file>
+       </dir>
+     </filelist>
+     <deps>
+      <dep type="php" rel="ge" version="4.1" />
+      <dep type="pkg" rel="ge" version="0.8.0">Math_Stats</dep>
+     </deps>
+   </release>
+  </changelog>
+
+</package>
+<!-- 
+     vim: ts=1:sw=1:et: 
+     vim6: fdm=syntax:fdl=1:
+-->

@@ -21,9 +21,9 @@
       <role>lead</role>
     </maintainer>
     <maintainer>
-      <user>jmcastagnetto</user>
-      <name>Jesus M. Castagnetto</name>
-      <email>jmcastagnetto@php.net</email>
+     <user>pdm</user>
+      <name>Paul Meagher</name>
+      <email>paul@datavore.com</email>
       <role>lead</role>
     </maintainer>
   </maintainers>

@@ -21,8 +21,19 @@
 // Last change: 22-May-2002.
 //
 
-require_once 'AbstractHistogram.php';
+include_once "Math/AbstractHistogram.php";
 
+/**
+ * Class to generate 3D histograms from bi-dimensional numeric
+ * arrays.
+ *
+ * Originally this class was part of NumPHP (Numeric PHP package)
+ *
+ * @author  Jesus M. Castagnetto <jmcastagnetto@php.net>
+ * @version 0.9.0
+ * @access  public
+ * @package Math_Histogram
+ */
 class Math_Histogram3D extends Math_AbstractHistogram {/*{{{*/
 
     /**

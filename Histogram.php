@@ -21,8 +21,7 @@
 // Last change: Tuesday 2002-05-21 19:58:48 PDT.
 //
 
-//include_once "Math/AbstractHistogram.php";
-include_once "AbstractHistogram.php";
+include_once "Math/AbstractHistogram.php";
 
 /**
  * Class to calculate the histogram distribution of a numerical data set.
@@ -74,7 +73,7 @@ include_once "AbstractHistogram.php";
  * Originally this class was part of NumPHP (Numeric PHP package)
  *
  * @author  Jesus M. Castagnetto <jmcastagnetto@php.net>
- * @version 1.0
+ * @version 0.9.0
  * @access  public
  * @package Math_Histogram
  */
@@ -283,6 +282,7 @@ class Math_Histogram extends Math_AbstractHistogram {/*{{{*/
 		return $out.sprintf(" (%.1f%%)", $freq/$total * 100);
 
     }/*}}}*/
+
     /**
      * Returns a subset of the bins array by bin value type
      *

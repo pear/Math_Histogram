@@ -19,21 +19,13 @@
 // $Id$
 //
 
-include_once "Math/Stats.php";
-
-// constants for the selection of bins
-define("HISTOGRAM_ALL_BINS", 1);
-define("HISTOGRAM_MID_BINS", 2);
-define("HISTOGRAM_LO_BINS", 3);
-define("HISTOGRAM_HI_BINS", 4);
-
-// histogram types
-define("HISTOGRAM_SIMPLE", 1);
-define("HISTOGRAM_CUMMULATIVE", 2);
+//include_once "Math/AbstractHistogram.php";
+include_once "AbstractHistogram.php";
 
 /**
  * Class to calculate the histogram distribution of a numerical data set.
  * It can calculate a regular distribution or a cummulative distribution.
+ * The resulting histogram is sometimes called a "2D Histogram"
  * Data must not have null values.
  *
  * Example of use:
@@ -84,73 +76,7 @@ define("HISTOGRAM_CUMMULATIVE", 2);
  * @access  public
  * @package Math_Histogram
  */
-class Math_Histogram {/*{{{*/
-    // properties /*{{{*/
-
-    /**
-     * The Math_Stats object
-     * 
-     * @access  private
-     * @var object  Math_Stats
-     * @see Math_Stats
-     */
-    var $_stats = null;
-    /**
-     * Mode for the calculation of statistics
-     * 
-     * @access  private
-     * @var int one of STATS_BASIC or STATS_FULL
-     * @see Math_Stats
-     */
-    var $_statsMode;
-    /**
-     * Array of bins
-     * 
-     * @access  private
-     * @var array
-     */
-    var $_bins = array();
-    /**
-     * Number of bins to use in calculation
-     *
-     * @access  private
-     * @var int
-     */
-    var $_nbins;
-    /**
-     * The lowest value to be used when generating the bins
-     *
-     * @access  private
-     * @var float
-     */
-    var $_rangeLow;
-    /**
-     * The highest value to be used when generating the bins
-     *
-     * @access  private
-     * @var float
-     */
-    var $_rangeHigh;
-    /**
-     * The data set after filtering using $this->_rangeHigh and
-     * $this->_rangeLow
-     *
-     * @access  private
-     * @var array
-     * @see $_rangeLow
-     * @see $_rangeHigh
-     */
-    var $_data = null;
-    /**
-     * The original data, count, etc.
-     *
-     * @access  private
-     * @var array
-     * @see $_data
-     */
-    var $_orig = array();
-
-    /*}}}*/
+class Math_Histogram extends Math_AbstractHistogram {/*{{{*/
 
     /**
      * Constructor
@@ -161,22 +87,43 @@ class Math_Histogram {/*{{{*/
      * @param   optional    float   $rangeLow   lowest value to use for bin frequency calculation
      * @param   optional    float   $rangeHigh   highest value to use for bin frequency calculation
      * @return  object  Math_Histogram
+     *
+     * @see setBinOptions()
+     * @see Math_AbstractHistogram::setType()
+     * @see Math_AbstractHistogram
      */
     function Math_Histogram($type=HISTOGRAM_SIMPLE,$nbins=-1, $rangeLow=null, $rangeHigh=null) {/*{{{*/
         $this->setType($type);
         $this->setBinOptions($nbins, $rangeLow, $rangeHigh);
     }/*}}}*/
 
-    function setType($type) {/*{{{*/
-        $this->_type = $type;
-    }/*}}}*/
-    
-    function setBinOptions($nbins, $rangeLow, $rangeHigh) {/*{{{*/
+    /**
+     * Sets the binning options
+     * 
+     * @access  public
+     * @param   int $nbins  the number of bins to use for computing the histogram
+     * @param   optional    float   $rangeLow   lowest value to use for bin frequency calculation
+     * @param   optional    float   $rangeHigh   highest value to use for bin frequency calculation
+     * @return  void
+     */
+    function setBinOptions($nbins, $rangeLow=null, $rangeHigh=null) {/*{{{*/
         $this->_nbins = (is_int($nbins) && $nbins > 2) ? $nbins : 10;
         $this->_rangeLow = $rangeLow;
         $this->_rangeHigh = $rangeHigh;
     }/*}}}*/
     
+    /**
+     * Sets the data to be processed. The data will be filtered using
+     * the low and high values for the range if set. So in the general
+     * case the original data and the one used for the histogram will
+     * not have the same number of elements.
+     *
+     * @access  public
+     * @param   array   $data   the numeric array
+     * @return  mixed   boolean true on success, a PEAR_Error object otherwise
+     * 
+     * @see _clear()
+     */
     function setData($data) {/*{{{*/
         $this->_clear();
         if (!is_array($data))
@@ -201,14 +148,30 @@ class Math_Histogram {/*{{{*/
         return true;
     }/*}}}*/
 
+    function getData() {
+        if (is_null($this->_data))
+            return PEAR::raiseError("data has not been set");
+        else
+            return $this->_data;
+    }
+
+    /**
+     * Calculates the histogram bins and frequencies
+     *
+     * @access  public
+     * @param   optional    $statsMode  calculate basic statistics (STATS_BASIC) or full (STATS_FULL)
+     * @return  mixed   boolean true on success, a PEAR_Error object otherwise
+     *
+     * @see Math_Stats
+     */
     function calculate($statsMode=STATS_BASIC) {/*{{{*/
         $this->_stats = new Math_Stats();
-        $this->_stats->setData($this->_data);
         $this->_statsMode = $statsMode;
         $delta = ($this->_rangeHigh - $this->_rangeLow) / $this->_nbins;
-        $ndata = count($this->_data);
         $lastpos = 0;
         $cumm = 0;
+        $data = $this->_filterData();
+        $ndata = count($data);
         for ($i=0; $i < $this->_nbins; $i++) {
             $loBin = $this->_rangeLow + $i * $delta;
             $hiBin = $loBin + $delta;
@@ -221,8 +184,8 @@ class Math_Histogram {/*{{{*/
                 $this->_bins[$i]["count"] = 0;
             for ($j=$lastpos; $j < $ndata; $j++) {
                 if ($i == 0) {
-                    if ($this->_data[$j] >= $loBin
-                        && $this->_data[$j] <= $hiBin) {
+                    if ($data[$j] >= $loBin
+                        && $data[$j] <= $hiBin) {
                         $this->_bins[$i]["count"]++;
                         if ($this->_type == HISTOGRAM_CUMMULATIVE)
                             $cumm++;
@@ -232,8 +195,8 @@ class Math_Histogram {/*{{{*/
                         break;
                     }
                 } else {
-                    if ($this->_data[$j] > $loBin
-                        && $this->_data[$j] <= $hiBin) {
+                    if ($data[$j] > $loBin
+                        && $data[$j] <= $hiBin) {
                         $this->_bins[$i]["count"]++;
                         if ($this->_type == HISTOGRAM_CUMMULATIVE)
                             $cumm++;
@@ -245,25 +208,47 @@ class Math_Histogram {/*{{{*/
                 } 
             }
         }
+        return true;
     }/*}}}*/
 
+    /**
+     * Returns the statistics for the data set and the histogram bins and
+     * frequencies
+     *
+     * @access  public
+     * @return  mixed   an associative array on success, a PEAR_Error object otherwise
+     */ 
     function getHistogramInfo() {/*{{{*/
-        if (!empty($this->_nbins))
-            return array (
+        if (!empty($this->_nbins)) {
+            $info = array (
                         "type" => ($this->_type == HISTOGRAM_CUMMULATIVE) ?  
                                             "cummulative frequency" : "histogram",
-                        "statistics" => $this->_stats->calc($this->_statsMode),
-                        "bins" => $this->_bins,
-                        "nbins" => $this->_nbins,
-                        "range" => array(
-                                    "low" => $this->_rangeLow,
-                                    "high" => $this->_rangeHigh
-                                    )
+                        "data_stats" => $this->getDataStats(),
                     );
-        else
+            // add the stats for the histogram subset if the bin ranges are
+            // not null
+            if (!is_null($this->_rangeLow) && !is_null($this->_rangeHigh))
+                $info ["hist_data_stats"] = $this->getHistogramDataStats();
+                        
+            $info["bins"] = $this->_bins;
+            $info["nbins"] = $this->_nbins;
+            $info["range"] = array(
+                                "low" => $this->_rangeLow,
+                                "high" => $this->_rangeHigh
+                                );
+            return $info;
+        } else {
             return PEAR::raiseError("histogram has not been calculated");
+        }
     }/*}}}*/
 
+    /**
+     * Returns the original data set, before it was filtered using the range
+     * limits
+     *
+     * @access  public
+     * @return  mixed   an associative array on success, a PEAR_Error object otherwise
+     */
     function getOriginal() {/*{{{*/
         if (empty($this->_orig))
             return PEAR::raiseError("data has not been set");
@@ -271,13 +256,45 @@ class Math_Histogram {/*{{{*/
             return $this->_orig;
     }/*}}}*/
 
-    function getStats() {/*{{{*/
-        if (!empty($this->_nbins))
+    /**
+     * Returns just the statistics for the data set
+     *
+     * @access  public
+     * @return  mixed   an associative array on success, a PEAR_Error object otherwise
+     */
+    function getDataStats() {/*{{{*/
+        if (!empty($this->_nbins)) {
+            $this->_stats->setData($this->_data);
             return $this->_stats->calc($this->_statsMode);
-        else
+        } else {
             return PEAR::raiseError("histogram has not been calculated");
+        }
     }/*}}}*/
 
+    /**
+     * Returns just the statistics for the data set, filtered using the bin
+     * range
+     *
+     * @access  public
+     * @return  mixed   an associative array on success, a PEAR_Error object otherwise
+     */
+    function getHistogramDataStats() {/*{{{*/
+        if (!empty($this->_nbins)) {
+            $this->_stats->setData($this->_filterData());
+            return $this->_stats->calc($this->_statsMode);
+        } else {
+            return PEAR::raiseError("histogram has not been calculated");
+        }
+    }/*}}}*/
+
+
+    /**
+     * Returns just bins and frequencies for the data set
+     *
+     * @access  public
+     * @param   optional    int $mode   one of HISTOGRAM_ALL_BINS, HISTOGRAM_LO_BINS, HISTOGRAM_MID_BINS, or HISTOGRAM_HI_BINS 
+     * @return  mixed   an associative array on success, a PEAR_Error object otherwise
+     */
     function getBins($mode = HISTOGRAM_ALL_BINS) {/*{{{*/
         if (empty($this->_bins))
             return PEAR::raiseError("histogram has not been calculated");
@@ -295,11 +312,20 @@ class Math_Histogram {/*{{{*/
         }
     }/*}}}*/
 
+    /**
+     * Prints a simple ASCII representation of the histogram
+     *
+     * @access  public
+     * @param   optional    int $mode   one of HISTOGRAM_LO_BINS, HISTOGRAM_MID_BINS, or HISTOGRAM_HI_BINS (default)
+     * @return  mixed   a string on success, a PEAR_Error object otherwise
+     */
     function printHistogram($mode = HISTOGRAM_HI_BINS) {/*{{{*/
         if (empty($this->_bins))
             return PEAR::raiseError("histogram has not been calculated");
         $out = ($this->_type == HISTOGRAM_CUMMULATIVE) ?  "Cummulative Frequency" : "Histogram";
         $out .= ", Number of bins: ".$this->_nbins."\n";
+        $out .= "Histogram range: [".$this->_rangeLow.", ".$this->_rangeHigh."]\n";
+        $out .= "Data range: [".min($this->_data).", ".max($this->_data)."]\n";
         $out .= "BIN (COUNT) BAR (%)\n";
         $fmt = "%-4.2f (%-4d) |%s\n";
         $bins = $this->_filterBins($mode);
@@ -339,6 +365,16 @@ class Math_Histogram {/*{{{*/
             $filtered["{$bin[$map[$mode]]}"] = $bin["count"];
         return $filtered;
     }/*}}}*/
+
+    function _filterData() {
+        $data = array();
+        foreach ($this->_data as $val)
+            if ($val < $this->_rangeLow || $val > $this->_rangeHigh)
+                continue;
+            else
+                $data[] = $val;
+        return $data;
+    }
     
 }/*}}}*/
 

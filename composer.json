@@ -1,0 +1,25 @@
+{
+    "authors": [
+        {
+            "email": "jmcastagnetto@php.net",
+            "name": "Jesus M. Castagnetto",
+            "role": "Lead"
+        }
+    ],
+    "autoload": {
+        "classmap": [
+            "./"
+        ]
+    },
+    "description": "More info available on: http://pear.php.net/package/Math_Histogram",
+    "license": "PHP",
+    "name": "pear/math_histogram",
+    "support": {
+        "issues": "http:///bugs/search.php?cmd=display&package_name[]=Math_Histogram",
+        "source": "https://github.com/pear/Math_Histogram"
+    },
+    "type": "library",
+    "require-dev": {
+        "phpunit/phpunit": "*"
+    }
+}
